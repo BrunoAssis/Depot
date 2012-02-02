@@ -1,7 +1,25 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
+  before_filter :set_i18n_locale_from_params
   before_filter :authorize
   before_filter :prepare_time_for_display
+
+  def set_i18n_locale_from_params
+    if params[:locale]
+      if I18n.available_locales.include?(params[:locale].to_sym)
+        I18n.locale = params[:locale]
+      else
+        flash.now[:notice] = "#{params[:locale]} translation not available. Fallback to default language."
+        logger.error flash.now[:notice]
+        I18n.locale = I18n.default_locale
+      end
+    end
+  end
+
+  def default_url_options
+    { locale: I18n.locale }
+  end
+
   def prepare_time_for_display
     @current_time = Time.now
   end
